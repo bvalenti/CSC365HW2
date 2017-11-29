@@ -29,6 +29,7 @@ public class BNode {
     public void readNode(long pointer) throws IOException {
         RandomAccessFile raf = new RandomAccessFile(BTreePath, "r");
 //        raf.seek(12 + (pointer-1)*buffSize);
+        System.out.println(pointer);
         raf.seek((pointer-1)*buffSize);
         FileChannel f = raf.getChannel();
         ByteBuffer b = ByteBuffer.allocate(buffSize);

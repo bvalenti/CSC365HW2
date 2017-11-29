@@ -358,12 +358,13 @@ public class MyUtility {
             FrequencyTable urlFreq = urlParser.parseURL(url);
 
             //Entry point for the full B-Tree traversal.
-            leftMost(e,urlFreq,lock,fetchType);
+            findMostSimilar(e,urlFreq,lock);
+//            leftMost(e,urlFreq,lock,fetchType);
             return simKey;
         } else {
-            //Entry point for the full B-Tree traversal.
-            leftMost(e,null,lock,fetchType);
-
+//            //Entry point for the full B-Tree traversal.
+//            leftMost(e,null,lock,fetchType);
+            findOldestFile(e);
             return fileKeyLastModified;
         }
     }
@@ -441,6 +442,57 @@ public class MyUtility {
             e.writeNode();
             if (e.id != rootId) {
                 moveToParent(e, urlFreq, lock, fetchType);
+            }
+        }
+    }
+
+    public void findMostSimilar(BNode r, FrequencyTable urlFreq, Object lock) throws IOException, ClassNotFoundException {
+        BNode e;
+
+        for (int i = 0; i < r.children.length; i++) {
+            if (r.children[i] != 0) {
+                e = new BNode(8);
+                e.readNode(r.children[i]);
+                findMostSimilar(e, urlFreq, lock);
+            }
+        }
+
+        double simTmp;
+        FrequencyTable tmpFreq;
+        for (int i = 0; i < r.keys.length; i++) {
+            if (r.keys[i] != null) {
+                synchronized (lock) {
+                    tmpFreq = getFrequencyTable(r.keys[i]);
+                }
+                simTmp = cosineSimMetric(tmpFreq, urlFreq);
+                if (simTmp > sim) {
+                    sim = simTmp;
+                    simKey = r.keys[i];
+                }
+            }
+        }
+    }
+
+    public void findOldestFile(BNode r) throws IOException, ClassNotFoundException {
+        BNode e;
+
+        for (int i = 0; i < r.children.length; i++) {
+            if (r.children[i] != 0) {
+                e = new BNode(8);
+                e.readNode(r.children[i]);
+                findOldestFile(e);
+            }
+        }
+
+        for (int i = 0; i < r.keys.length; i++) {
+            if (r.keys[i] != null) {
+                Path a = getFilePath(r.keys[i]);
+                File file = a.toFile();
+                if (file.lastModified() < lastModified) {
+                    lastModified = file.lastModified();
+                    fileKeyLastModified = r.keys[i];
+                    fileLastModified = file;
+                }
             }
         }
     }

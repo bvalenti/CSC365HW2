@@ -33,6 +33,7 @@ public class BTree {
     private BTree(int k) throws IOException {
         BNode x = new BNode(k);
         x.id = 1;
+        x.id = 2;
         x.isLeaf = 1;
         x.numOfCurrentKeys = 0;
         x.writeNode();
